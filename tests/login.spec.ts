@@ -1,52 +1,6 @@
-import { APIRequestContext, expect, test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import { LoginPage } from '../pages/LoginPage'
-
-type TestUser = {
-    name: string
-    email: string
-    password: string
-}
-
-async function createUser(request: APIRequestContext): Promise<TestUser> {
-    const user: TestUser = {
-        name: 'Login QA User',
-        email: `login.qa.${Date.now()}.${Math.random().toString(36).slice(2)}@example.com`,
-        password: 'Playwright123!'
-    }
-
-    const response = await request.post('/api/createAccount', {
-        form: {
-            ...user,
-            title: 'Mr',
-            birth_date: '1',
-            birth_month: 'January',
-            birth_year: '1990',
-            firstname: 'Login',
-            lastname: 'Tester',
-            company: 'QA',
-            address1: '1 Test Street',
-            address2: '',
-            country: 'United States',
-            zipcode: '10001',
-            state: 'New York',
-            city: 'New York',
-            mobile_number: '1234567890'
-        }
-    })
-
-    expect(response.ok()).toBeTruthy()
-    expect(await response.json()).toMatchObject({ responseCode: 201 })
-    return user
-}
-
-async function deleteUser(request: APIRequestContext, user: TestUser) {
-    const response = await request.delete('/api/deleteAccount', {
-        form: { email: user.email, password: user.password }
-    })
-
-    expect(response.ok()).toBeTruthy()
-    expect(await response.json()).toMatchObject({ responseCode: 200 })
-}
+import { buildTestAccount, createTestAccount, deleteTestAccount } from '../utils/test-accounts'
 
 test.describe('Login', () => {
     let loginPage: LoginPage
@@ -57,7 +11,8 @@ test.describe('Login', () => {
     })
 
     test('valid credentials log the user in', async ({ page, request }) => {
-        const user = await createUser(request)
+        const user = buildTestAccount('login.valid', { name: 'Login QA User' })
+        await createTestAccount(request, user)
 
         try {
             await loginPage.login(user.email, user.password)
@@ -65,18 +20,19 @@ test.describe('Login', () => {
             await expect(page.getByText(`Logged in as ${user.name}`)).toBeVisible()
             await expect(loginPage.logoutLink).toBeVisible()
         } finally {
-            await deleteUser(request, user)
+            await deleteTestAccount(request, user)
         }
     })
 
     test('invalid password displays an error', async ({ request }) => {
-        const user = await createUser(request)
+        const user = buildTestAccount('login.invalid-password', { name: 'Login QA User' })
+        await createTestAccount(request, user)
 
         try {
             await loginPage.login(user.email, 'wrong-password')
             await expect(loginPage.errorMessage).toBeVisible()
         } finally {
-            await deleteUser(request, user)
+            await deleteTestAccount(request, user)
         }
     })
 
@@ -103,7 +59,8 @@ test.describe('Login', () => {
     })
 
     test('logout ends the user session', async ({ page, request }) => {
-        const user = await createUser(request)
+        const user = buildTestAccount('login.logout', { name: 'Login QA User' })
+        await createTestAccount(request, user)
 
         try {
             await loginPage.login(user.email, user.password)
@@ -115,7 +72,7 @@ test.describe('Login', () => {
             await expect(page.getByRole('link', { name: 'Signup / Login' })).toBeVisible()
             await expect(loginPage.logoutLink).toBeHidden()
         } finally {
-            await deleteUser(request, user)
+            await deleteTestAccount(request, user)
         }
     })
 })

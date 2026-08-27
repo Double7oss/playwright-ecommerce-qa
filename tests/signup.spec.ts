@@ -1,55 +1,7 @@
-import { APIRequestContext, test, expect } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import { LoginPage } from '../pages/LoginPage'
 import { SignUpPage } from '../pages/SignUpPage'
-
-type SignupUser = {
-    name: string
-    email: string
-    password: string
-}
-
-function uniqueUser(prefix: string): SignupUser {
-    return {
-        name: 'Signup QA User',
-        email: `${prefix}.${Date.now()}.${Math.random().toString(36).slice(2)}@example.com`,
-        password: 'Playwright123!'
-    }
-}
-
-async function createUser(request: APIRequestContext, user: SignupUser) {
-    const response = await request.post('/api/createAccount', {
-        form: {
-            ...user,
-            title: 'Mr',
-            birth_date: '1',
-            birth_month: 'January',
-            birth_year: '1990',
-            firstname: 'Signup',
-            lastname: 'Tester',
-            company: 'QA',
-            address1: '1 Test Street',
-            address2: '',
-            country: 'United States',
-            zipcode: '10001',
-            state: 'New York',
-            city: 'New York',
-            mobile_number: '1234567890'
-        }
-    })
-
-    expect(response.ok()).toBeTruthy()
-    expect(await response.json()).toMatchObject({ responseCode: 201 })
-}
-
-async function deleteUser(request: APIRequestContext, user: SignupUser, allowMissing = false) {
-    const response = await request.delete('/api/deleteAccount', {
-        form: { email: user.email, password: user.password }
-    })
-    const body = await response.json()
-
-    expect(response.ok()).toBeTruthy()
-    expect(allowMissing ? [200, 404] : [200]).toContain(body.responseCode)
-}
+import { buildTestAccount, createTestAccount, deleteTestAccount } from '../utils/test-accounts'
 
 test.describe('Signup and login forms', () => {
     let signUpPage: SignUpPage
@@ -128,7 +80,12 @@ test.describe('Signup and login forms', () => {
     })
 
     test('creates an account with complete registration details', async ({ page, request }) => {
-        const user = uniqueUser('signup.complete')
+        const user = buildTestAccount('signup.complete', {
+            name: 'Signup QA User',
+            firstName: 'Signup',
+            state: 'New York',
+            city: 'New York'
+        })
 
         await signUpPage.signUp(user.name, user.email)
         await expect(signUpPage.accountInformationHeading).toBeVisible()
@@ -136,32 +93,32 @@ test.describe('Signup and login forms', () => {
         try {
             await signUpPage.completeAccountInformation({
                 password: user.password,
-                firstName: 'Signup',
-                lastName: 'Tester',
-                address: '1 Test Street',
-                country: 'United States',
-                state: 'New York',
-                city: 'New York',
-                zipcode: '10001',
-                mobileNumber: '1234567890'
+                firstName: user.firstName,
+                lastName: user.lastName,
+                address: user.address,
+                country: user.country,
+                state: user.state,
+                city: user.city,
+                zipcode: user.zipcode,
+                mobileNumber: user.mobileNumber
             })
 
             await expect(page.getByRole('heading', { name: 'Account Created!' })).toBeVisible()
         } finally {
-            await deleteUser(request, user, true)
+            await deleteTestAccount(request, user, { allowMissing: true })
         }
     })
 
     test('rejects signup with an existing email', async ({ request }) => {
-        const user = uniqueUser('signup.existing')
-        await createUser(request, user)
+        const user = buildTestAccount('signup.existing', { name: 'Signup QA User' })
+        await createTestAccount(request, user)
 
         try {
             await signUpPage.signUp(user.name, user.email)
 
             await expect(signUpPage.existingEmailError).toBeVisible()
         } finally {
-            await deleteUser(request, user)
+            await deleteTestAccount(request, user)
         }
     })
 

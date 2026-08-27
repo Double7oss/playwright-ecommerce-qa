@@ -1,18 +1,74 @@
 # Playwright Web QA Portfolio
 
-## Overview
+A Playwright + TypeScript QA automation project demonstrating functional, negative, validation, API-assisted, and end-to-end testing against the public [Automation Exercise](https://automationexercise.com/) e-commerce application.
 
-This project demonstrates functional web testing with Playwright and TypeScript against [Automation Exercise](https://automationexercise.com/). The current suite covers authentication, product listing and search, product details, and one cross-domain checkout journey.
+## Why This Project
 
-## End-to-End Coverage
+This portfolio demonstrates practical QA engineering beyond scripted clicking: risk-based scenario selection, independent tests, controlled data, meaningful state assertions, cleanup, failure evidence, and continuous integration.
 
-The suite includes a realistic business journey covering:
+## Current Coverage
 
-**Authentication → Product Search → Product Selection → Cart → Checkout**
+The Chromium suite contains 21 tests:
 
-The test creates a unique fictional user through the API, logs in through the UI, searches for and selects a product, validates its cart state, and verifies the authenticated checkout review and delivery address. It stops before placing the order and does not submit payment information.
+| Area | Tests | Coverage |
+|---|---:|---|
+| Authentication | 14 | Signup, login, logout, positive/negative paths, required fields, and email validation |
+| Products and search | 4 | Listing, matching and empty search results, and product details |
+| End-to-end | 1 | Authentication → search → selection → cart → checkout review |
+| Other | 2 | Homepage smoke check and newsletter form validation |
+
+There are no standalone cart tests. Cart name, quantity, price, total, and checkout transition are validated within the E2E journey. Payment is not submitted and no order is completed.
+
+## Architecture
+
+```text
+Test Specifications
+        ↓
+Page Objects
+        ↓
+Playwright
+        ↓
+Automation Exercise
+
+API Setup → UI Behavior → API Cleanup
+```
+
+Page Objects hold reusable locators and interaction details; behavioral assertions remain visible in the specifications. API-assisted setup creates unique disposable users quickly when registration is not the behavior under test, and cleanup removes those accounts even when practical UI assertions fail.
+
+## QA Approach
+
+- Functional UI, smoke, negative, and native form-validation testing
+- Page Object Model without hiding test intent
+- Resilient role, label, placeholder, and text locators where supported
+- Unique fictional test accounts with API-assisted setup and cleanup
+- Independent tests with Playwright auto-waiting and no arbitrary sleeps
+- HTML reports, failure screenshots, first-retry traces, and retry-only videos
+- Chromium execution locally and in GitHub Actions
+
+## Technology
+
+- Playwright Test 1.62.1
+- TypeScript 7.0.2
+- Node.js 24 in CI
+- GitHub Actions
+- npm
+
+## Project Structure
+
+```text
+pages/                    Page Objects
+tests/                    Smoke and authentication specifications
+tests/products/           Product listing, search, and detail tests
+tests/e2e/                Cross-domain checkout journey
+utils/test-accounts.ts    Disposable account data and API lifecycle
+docs/                     Test plan, test cases, and bug-report log
+.github/workflows/        GitHub Actions workflow
+playwright.config.ts      Browser, reporter, retry, and evidence settings
+```
 
 ## Running Locally
+
+Prerequisites: Node.js 20 or newer and npm.
 
 ```bash
 npm ci
@@ -21,29 +77,32 @@ npm run typecheck
 npm test
 ```
 
-Useful test commands:
+Useful commands:
 
 ```bash
 npm run test:headed
 npm run test:ui
-npm run typecheck
+npm run test:debug
 npm run test:report
-```
-
-Run only the end-to-end journey:
-
-```bash
 npx playwright test tests/e2e/purchase-flow.spec.ts
 ```
 
-Open the latest HTML report:
+## Reports and Debugging
 
-```bash
-npm run test:report
-```
+Playwright generates an HTML report for real executions. Failure screenshots are retained automatically; CI retries additionally collect a trace and video. Generated reports and test results are ignored by Git and uploaded as workflow artifacts where appropriate.
 
 ## CI/CD
 
-The GitHub Actions workflow is configured to run on pushes to `main` and pull requests targeting `main`. It installs locked npm dependencies, installs Chromium with its Linux system dependencies, validates TypeScript, and executes the Playwright suite.
+[GitHub Actions](https://github.com/Double7oss/playwright-ecommerce-qa/actions/workflows/playwright.yml) runs on pushes to `main` and pull requests targeting `main`. The workflow installs locked dependencies, installs Chromium and Linux browser dependencies, validates TypeScript, executes the suite, always attempts to upload the HTML report, and uploads failure evidence when tests fail.
 
-Every workflow run attempts to upload the generated HTML report as a GitHub artifact. Failed runs also preserve `test-results`, which may contain failure screenshots and retry traces or videos. Successful and failed executions can be reviewed in the repository's [GitHub Actions history](https://github.com/Double7oss/playwright-ecommerce-qa/actions/workflows/playwright.yml).
+CI has been verified with a real successful GitHub-hosted run. Generated reports are stored as workflow artifacts rather than committed to the repository.
+
+## QA Documentation
+
+- [Test Plan](docs/TEST_PLAN.md)
+- [Automated Test Cases](docs/TEST_CASES.md)
+- [Bug Reports](docs/BUG_REPORTS.md)
+
+## Limitations
+
+Portfolio V1 intentionally excludes standalone cart coverage, payment submission, completed orders, cross-browser projects, accessibility, visual regression, performance, and security testing. The suite targets a public external site, so availability and unannounced application changes remain external risks.
