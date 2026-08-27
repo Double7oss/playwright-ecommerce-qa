@@ -46,4 +46,4 @@ npm run test:report
 
 The GitHub Actions workflow is configured to run on pushes to `main` and pull requests targeting `main`. It installs locked npm dependencies, installs Chromium with its Linux system dependencies, validates TypeScript, and executes the Playwright suite.
 
-Every workflow run attempts to upload the generated HTML report as a GitHub artifact. Failed runs also preserve `test-results`, which may contain failure screenshots and retry traces or videos. The workflow is configured locally but should not be considered verified until it completes successfully in GitHub Actions.
+Every workflow run attempts to upload the generated HTML report as a GitHub artifact. Failed runs also preserve `test-results`, which may contain failure screenshots and retry traces or videos. Successful and failed executions can be reviewed in the repository's [GitHub Actions history](https://github.com/Double7oss/playwright-ecommerce-qa/actions/workflows/playwright.yml).
