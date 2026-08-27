@@ -1,14 +1,22 @@
 # Playwright Web QA Portfolio
 
+[![Playwright Tests](https://github.com/Double7oss/playwright-ecommerce-qa/actions/workflows/playwright.yml/badge.svg?branch=main)](https://github.com/Double7oss/playwright-ecommerce-qa/actions/workflows/playwright.yml)
+
 A Playwright + TypeScript QA automation project demonstrating functional, negative, validation, API-assisted, and end-to-end testing against the public [Automation Exercise](https://automationexercise.com/) e-commerce application.
 
-## Why This Project
+## What This Project Demonstrates
 
-This portfolio demonstrates practical QA engineering beyond scripted clicking: risk-based scenario selection, independent tests, controlled data, meaningful state assertions, cleanup, failure evidence, and continuous integration.
+- Positive and negative functional UI scenarios
+- Native browser form-validation checks
+- Page Object Model with assertions kept visible in tests
+- API-assisted creation and cleanup of disposable accounts
+- Product listing, search, details, and cart-to-checkout validation
+- Independent test execution with controlled data
+- GitHub Actions, HTML reporting, screenshots, traces, and retry videos
 
 ## Current Coverage
 
-The Chromium suite contains 21 tests:
+The suite contains 21 logical scenarios and 21 browser executions because one Chromium project is configured:
 
 | Area | Tests | Coverage |
 |---|---:|---|
@@ -53,6 +61,10 @@ Page Objects hold reusable locators and interaction details; behavioral assertio
 - GitHub Actions
 - npm
 
+## Browser Coverage
+
+The configured project uses Playwright Chromium with the Desktop Chrome device profile. Firefox, WebKit, branded Chrome, mobile, and cross-browser execution are not part of Portfolio V1.
+
 ## Project Structure
 
 ```text
@@ -90,6 +102,13 @@ npx playwright test tests/e2e/purchase-flow.spec.ts
 ## Reports and Debugging
 
 Playwright generates an HTML report for real executions. Failure screenshots are retained automatically; CI retries additionally collect a trace and video. Generated reports and test results are ignored by Git and uploaded as workflow artifacts where appropriate.
+
+## Key Engineering Decisions
+
+- **Page Object Model:** repeated navigation, locators, and UI interactions are centralized without hiding behavioral assertions.
+- **API-assisted setup:** the account API creates controlled preconditions quickly while login, validation, and checkout behavior remain UI-based.
+- **Test isolation:** tests create unique data, prepare their own state, and attempt cleanup without depending on execution order.
+- **Reliable locators:** roles, labels, placeholders, and visible text are preferred; scoped CSS is used only where application markup requires it.
 
 ## CI/CD
 
